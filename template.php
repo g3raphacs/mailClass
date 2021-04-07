@@ -1,11 +1,12 @@
 <html>
     <body>
-        <h1 style="color:red;">Ceci est un titre H1</h1>
-        <p>Ceci est un paragraphe</p>
-        <h2>Ceci est un titre H2</h2>
-        <p>Ceci est un paragraphe</p>
-        <a href="{SITE_ADDR}">lien vers un site</a> <br>
+        <p>Message envoyé par {fromName} < {from} ></p>
+        <h2 style="color:red;">Sujet: {subject}</h2>
+        <p>{msg}</p>
+        <p><a href="{LINK}">lien vers un site</a></p>
+        <br>
         <img src="{IMG}" alt="" width="300px" height="160px">
+        <br>
     </body>
 
 </html>

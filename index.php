@@ -16,8 +16,8 @@
         <input type="email" id="bcc" name="bcc" multiple="multiple">
         <label for="subject">Objet:</label>
         <input type="text" id="subject" name="subject">
-        <label for="message">Message:</label>
-        <input type="textarea" rows="5" cols="33" id="message" name="message">
+        <label for="msg">Message:</label>
+        <input type="textarea" rows="5" cols="33" id="msg" name="msg">
         <label for="file">Pièce jointe:</label>
         <input type="file" id="file" name="file[]" multiple="multiple">
         <button type="submit">Envoyer</button>
