@@ -30,7 +30,7 @@ class MailObject
     private $template_data= array();
     private $cc = [];
     private $bcc = [];
-    private $msg = "";
+    private $msg = "hello world!";
     private $html = true;
 
     // Boundary
@@ -114,14 +114,12 @@ class MailObject
 
         //ajout boundary
         $headers .= " boundary=\"{$this->boundary}\"";
-
         $msg = $this->setMsgHeader($msg);
         $msg = $this->prepareFiles($msg);
         $msg .= "--{$this->boundary}--"; 
         $returnpath = "-f" . $this->from;
         
-
-        var_dump($_POST['msg']);
+        
         // Envoi du mail
         if(!$this->TEST_MODE){
             return @mail(implode(",",$this->to), $this->subject, $msg, $headers, $returnpath);  
@@ -148,7 +146,6 @@ class MailObject
             }
             return $htmlContent;
         }
-        var_dump($this->msg);
         return $this->msg;
     }
 
@@ -158,9 +155,9 @@ class MailObject
      * @param string $msg
      * @return void
      */
-    private function prepareFiles():string{
+    private function prepareFiles($msg):string{
     // Preparation des fichiers
-        $message = $this->msg;
+        $message = $msg;
         if(count($_FILES['file']['name'])>0 && $_FILES['file']['name'][0]!==""){
             for($i =0 ; $i<count($_FILES['file']['name']) ; $i++){
                 $file_name = $_FILES['file']['name'][$i]; 
@@ -250,7 +247,7 @@ class MailObject
         $this->bcc = $tab;
         return $this;
     }
-    private function set_msg(bool $msg)
+    private function set_msg(string $msg)
     {
         $this->msg = $msg;
         return $this;
