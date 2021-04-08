@@ -18,7 +18,7 @@
             <p class="lg:text-xl">Responsive</p>
         </div>
         <div class="ml-6 mr-6 lg:w-1/3">
-            <form action="./MailController.php" method="post" enctype="multipart/form-data" class="mt-6 lg:border-l-2 lg:border-blue-100 h-full lg:pl-16">
+            <form action="./mail/MailController.php" method="post" enctype="multipart/form-data" class="mt-6 lg:border-l-2 lg:border-blue-100 h-full lg:pl-16">
                 <label for="to">Destinataire(s) :</label>
                 <input type="email" id="to" name="to" multiple="multiple" class="mb-2 rounded-sm px-4 py-3 mt-2 focus:outline-none bg-gray-100 w-full">
                 <label for="cc">Cc :</label>
