@@ -124,6 +124,7 @@ class MailObject
 
             // fermeture du message
             $body .= $this->closeMessage();
+
             
             // Envoi du mail
             if(!$this->TEST_MODE){
@@ -136,7 +137,7 @@ class MailObject
      * Teste si l'option HTML est activée
      * @return bool
      */
-    private function checkHTML():bool{
+    protected function checkHTML():bool{
         if($this->html && file_exists($this->template_file)){
             return true;
         }return false;

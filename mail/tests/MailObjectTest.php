@@ -1,26 +1,44 @@
 <?php
 
-namespace Mail\Tests;
-use Mail\MailObject;
+namespace Mail;
 
 use BadFunctionCallException;
 use PHPUnit\Framework\TestCase;
 
 class MailObjectTest extends TestCase
 {
-    // public function testReturnvoid()
-    // {
-    //     $test = new MailObject;
-    //     $test->hydrate($data);
-    //     $this->assertNull('foo');
-    // }
+    // public function test(){
+    //     $object = new MailObject();
+    //     $methodName = "validateMails";
 
-    public function testSendMailtrue() :void
-    {
-        $sendMail = new MailObject;
-        $sendMail->SendMail();
-        $this->assertTrue(True->$body[, string $message = '']);
-        
-    }
+    //     $reflection = new \ReflectionClass(get_class($object));
+    //     $method = $reflection->getMethod($methodName);
+    //     $method->setAccessible(true);
+
+    //     $objectReflection = $method->invokeArgs($object, array(["test@gmail.com","salutgmail.com"]));
+    //     print_r($objectReflection);
+
+    //     $this->assertCount(2, $objectReflection);
+
+    // }
     
+    public function test(){
+        $object = new MailObject();
+        $methodName = "validateMails";
+
+        $reflection = new \ReflectionClass(get_class($object));
+        $method = $reflection->getMethod($methodName);
+        $method->setAccessible(true);
+
+        $objectReflection = $method->invokeArgs($object, array(["test@gmail.com","salutgmail.com"]));
+        print_r($objectReflection);
+
+        $this->assertCount(2, $objectReflection);
+
+    }
+
+
+
 }
+
+
