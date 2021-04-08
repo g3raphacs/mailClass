@@ -32,9 +32,10 @@ class MailObject
     private $bcc = [];
     private $msg = "hello world!";
     private $html = true;
+    private $returnpath = "";
+    private $boundary = "";
 
-    // Boundary
-    private $boundary;
+    private $MIMEversion = "MIME-Version: 1.0";
 
     /**
      * Initialisation de la class
@@ -53,6 +54,7 @@ class MailObject
             $this->addVariables($_POST);
         }
     }
+
     /**
      * Mise à jour des propriétés de la classe
      * 
@@ -70,6 +72,7 @@ class MailObject
             }    
         }
     }
+
     /**
      * Ajout de variabes au template
      * 
@@ -100,48 +103,54 @@ class MailObject
      * @return boolean
      */
     public function sendMail():bool{
-        $msg = $this->createMessage();
+        $body = $this->createMessage();
 
-        $from = $this->fromName." <".$this->from.">";
-        $headers = "From: ".$from."\n";
+        // ajout du header du message
+        $headers = $this->addHeader();
 
         // destinataires en copie et copie cachée
-        $headers .= 'Cc: '.implode(",", $this->cc)."\n"; 
-        $headers .= 'Bcc: '.implode(",", $this->bcc); 
+        $headers .= $this->addCopyDest();
 
-        // Headers pour pieces jointes
-        $headers .= "\nMIME-Version: 1.0\n" . "Content-Type: multipart/mixed;\n";
+        // ajout du MIME et du content-type
+        $headers .= $this->addMIME();
 
-        //ajout boundary
-        $headers .= " boundary=\"{$this->boundary}\"";
-        $msg = $this->setMsgHeader($msg);
-        $msg = $this->prepareFiles($msg);
-        $msg .= "--{$this->boundary}--"; 
-        $returnpath = "-f" . $this->from;
-        
+        // ajoute le header du body
+        $body = $this->setMsgHeader($body);
+
+        // ajoute les fichiers joints
+        $body = $this->prepareFiles($body);
+
+        // fermeture du message
+        $body .= $this->closeMessage();
         
         // Envoi du mail
         if(!$this->TEST_MODE){
-            return @mail(implode(",",$this->to), $this->subject, $msg, $headers, $returnpath);  
-        }
+            return @mail(implode(",",$this->to), $this->subject, $body, $headers, $this->returnpath);  
+        }return false;
     }
-
     /**
-     * creer le message
+     * Teste si l'option HTML est activée
+     * @return bool
+     */
+    private function checkHTML():bool{
+        if($this->html && file_exists($this->template_file)){
+            return true;
+        }return false;
+    }
+    /**
+     * Créer le message
      *
      * @param string $msg
      * @return string
      */
     private function createMessage():string{
-        if($this->html && file_exists($this->template_file)){
+        if($this->checkHTML()){
             // creation du message html
-            $file = $this->template_file;
-            $data = $this->template_data;
-            $htmlContent = file_get_contents($file);
+            $htmlContent = file_get_contents($this->template_file);
             //chercher et remplacer toutes les variables $template_data
-            foreach(array_keys($data) as $key){
+            foreach(array_keys($this->template_data) as $key){
                 if(strlen($key) > 2 && trim($key) != ""){
-                    $htmlContent  =str_replace($key, $data[$key], $htmlContent);
+                    $htmlContent  =str_replace($key, $this->template_data[$key], $htmlContent);
                 }
             }
             return $htmlContent;
@@ -150,13 +159,49 @@ class MailObject
     }
 
     /**
-     * Ajoute les fichiers télécharger
+     * Ajout header
+     *
+     * @return string
+     */
+    private function addHeader():string{
+        $fromline = $this->fromName." <".$this->from.">";
+        return "From: ".$fromline."\n";
+    }
+
+    /**
+     * Fermeture du message
+     *
+     * @return string
+     */
+    private function closeMessage():string{
+        return "--{$this->boundary}--";
+    }
+
+    /**
+     * Ajout MIME et content-type
+     *
+     * @return string
+     */
+    private function addMIME():string{
+        return "\n".$this->MIMEversion."\n" . "Content-Type: multipart/mixed;\n" . " boundary=\"{$this->boundary}\"";
+    }
+
+    /**
+     * Ajout destinataire en cc et bcc
+     *
+     * @return string
+     */
+    private function addCopyDest():string{
+        return 'Cc: '.implode(",", $this->cc)."\n".'Bcc: '.implode(",", $this->bcc); 
+    }
+    
+    /**
+     * Préparation des fichiers
      *
      * @param string $msg
      * @return void
      */
     private function prepareFiles($msg):string{
-    // Preparation des fichiers
         $message = $msg;
         if(count($_FILES['file']['name'])>0 && $_FILES['file']['name'][0]!==""){
             for($i =0 ; $i<count($_FILES['file']['name']) ; $i++){
@@ -184,14 +229,13 @@ class MailObject
      * @return string
      */
     private function setMsgHeader(string $msg):string{
-        if($this->html && file_exists($this->template_file)){
+        if($this->checkHTML()){
             $header = "Content-Type: text/html; charset=\"UTF-8\"\n"."Content-Transfer-Encoding: 7bit\n\n";
         }else{
             $header = "Content-Type: text/plain; charset=\"ISO-8859-1\"\n"."Content-Transfer-Encoding: 7bit\n\n";
         }
         return "--{$this->boundary}\n".$header.$msg."\n\n";
     }
-
     
     /**
      * Setters
@@ -207,6 +251,7 @@ class MailObject
     private function set_from(string $from)
     {
         $this->from = $from;
+        $this->returnpath = "-f" . $this->from;
         return $this;
     }
     private function set_fromName(string $fromName)
