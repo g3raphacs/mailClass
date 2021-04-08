@@ -1,0 +1,19 @@
+{
+    "name": "shoar/mail-class",
+    "description": "class mail",
+    "require-dev": {
+        "phpunit/phpunit": "^9.5"
+    },
+    "authors": [
+        {
+            "name": "sawkea",
+            "email": "shoareau@orange.fr"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Mail\\" : "./mail"
+        }
+    },
+    "require": {}
+}
