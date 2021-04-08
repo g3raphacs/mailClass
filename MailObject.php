@@ -103,30 +103,33 @@ class MailObject
      * @return boolean
      */
     public function sendMail():bool{
-        $body = $this->createMessage();
+        if($this->hasTo()){
+            $body = $this->createMessage();
 
-        // ajout du header du message
-        $headers = $this->addHeader();
+            // ajout du header du message
+            $headers = $this->addHeader();
 
-        // destinataires en copie et copie cachée
-        $headers .= $this->addCopyDest();
+            // destinataires en copie et copie cachée
+            $headers .= $this->addCopyDest();
 
-        // ajout du MIME et du content-type
-        $headers .= $this->addMIME();
+            // ajout du MIME et du content-type
+            $headers .= $this->addMIME();
 
-        // ajoute le header du body
-        $body = $this->setMsgHeader($body);
+            // ajoute le header du body
+            $body = $this->setMsgHeader($body);
 
-        // ajoute les fichiers joints
-        $body = $this->prepareFiles($body);
+            // ajoute les fichiers joints
+            $body = $this->prepareFiles($body);
 
-        // fermeture du message
-        $body .= $this->closeMessage();
-        
-        // Envoi du mail
-        if(!$this->TEST_MODE){
-            return @mail(implode(",",$this->to), $this->subject, $body, $headers, $this->returnpath);  
-        }return false;
+            // fermeture du message
+            $body .= $this->closeMessage();
+            
+            // Envoi du mail
+            if(!$this->TEST_MODE){
+                return @mail(implode(",",$this->to), $this->subject, $body, $headers, $this->returnpath);  
+            }
+        }
+        return false;   
     }
     /**
      * Teste si l'option HTML est activée
@@ -156,6 +159,22 @@ class MailObject
             return $htmlContent;
         }
         return $this->msg;
+    }
+
+    /**
+     * Valide emails
+     *
+     * @param array $mails
+     * @return void
+     */
+    private function validateMails(array $mails){
+        $tab = [];
+        for($i=0 ; $i<count($mails) ; $i++){
+            if (filter_var($mails[$i], FILTER_VALIDATE_EMAIL)) {
+                $tab[$i] = $mails[$i];
+            }
+        }
+        return $tab;
     }
 
     /**
@@ -192,7 +211,24 @@ class MailObject
      * @return string
      */
     private function addCopyDest():string{
-        return 'Cc: '.implode(",", $this->cc)."\n".'Bcc: '.implode(",", $this->bcc); 
+        $value="";
+        if(count($this->cc)>0){
+            $value = 'Cc: '.implode(",", $this->cc)."\n";
+        }
+        if(count($this->bcc)>0){
+            $value .= 'Bcc: '.implode(",", $this->bcc);
+        }
+        return $value; 
+    }
+    /**
+     * Vérifie si il y a des destinataires
+     *
+     * @return bool
+     */
+    private function hasTo():bool{
+        if(count($this->to)>0){
+            return true;
+        }return false;
     }
     
     /**
@@ -203,7 +239,7 @@ class MailObject
      */
     private function prepareFiles($msg):string{
         $message = $msg;
-        if(count($_FILES['file']['name'])>0 && $_FILES['file']['name'][0]!==""){
+        if(!empty($_FILES) && count($_FILES['file']['name'])>0 && $_FILES['file']['name'][0]!==""){
             for($i =0 ; $i<count($_FILES['file']['name']) ; $i++){
                 $file_name = $_FILES['file']['name'][$i]; 
                 $file_size = $_FILES['file']['size'][$i]; 
@@ -262,6 +298,7 @@ class MailObject
     private function set_to(string $to)
     {
         $tab = explode(",",$to);
+        $tab = $this->validateMails($tab);
         $this->to = $tab;
         return $this;
     }
@@ -283,12 +320,14 @@ class MailObject
     private function set_cc(string $cc)
     {
         $tab = explode(",",$cc);
+        $tab = $this->validateMails($tab);
         $this->cc = $tab;
         return $this;
     }
     private function set_bcc(string $bcc)
     {
         $tab = explode(",",$bcc);
+        $tab = $this->validateMails($tab);
         $this->bcc = $tab;
         return $this;
     }
