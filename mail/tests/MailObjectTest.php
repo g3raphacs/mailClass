@@ -15,6 +15,7 @@ class MailObjectTest extends TestCase
             "hello" => "salut@gmail.com"
         )));
     }
+    
     /** @test */
     public function hydrateTrue() {
         $object = new MailObject();
@@ -23,6 +24,22 @@ class MailObjectTest extends TestCase
         "from" => "salut@gmail.com"
         )));
     }
+
+    /** @test */
+    public function hydrateFalse2(){
+        $object = new MailObject();
+        $this->expectException('Exception');
+        $object->hydrate(array(
+            "from" => "salut@gmail.com"
+        ));
+    }
+ 
+    // public function test(){
+
+    //     $object = new MailObject();
+    //     $this->assertCount(2, $this->invokeMethod($object, 'validateMails', array(["test@gmail.com","salut@gmail.com"])));
+    // }
+    
 
     // methode permettant d'invoquer les fonctions privées et protected
     public function invokeMethod(&$object, $methodName, array $parameters = array()){
@@ -34,5 +51,3 @@ class MailObjectTest extends TestCase
     }
 
 }
-
-

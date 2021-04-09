@@ -3,6 +3,7 @@ namespace Mail;
 
 use Exception;
 
+
 /** 
  * Class MailObject 
  * Permet d'envoyer un mail

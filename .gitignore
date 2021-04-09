@@ -1,5 +1,5 @@
 /classExemple.php
 /mail2.php
 /testmail.php
-/vendor/
+# /vendor/
 /composer.lock
