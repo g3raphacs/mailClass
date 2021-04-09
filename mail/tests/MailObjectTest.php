@@ -6,39 +6,45 @@ use PHPUnit\Framework\TestCase;
 
 class MailObjectTest extends TestCase
 {
-    /** @test */
-    public function hydrateFalse() 
-    {
-        $object = new MailObject();
-
-        $this->assertFalse($object->hydrate(array(
-            "hello" => "salut@gmail.com"
-        )));
-    }
-    
-    /** @test */
-    public function hydrateTrue() {
-        $object = new MailObject();
-
-        $this->assertTrue($object->hydrate(array(
-        "from" => "salut@gmail.com"
-        )));
-    }
-
-    /** @test */
-    public function hydrateFalse2(){
-        $object = new MailObject();
-        $this->expectException('Exception');
-        $object->hydrate(array(
-            "from" => "salut@gmail.com"
-        ));
-    }
  
-    // public function test(){
+    /** 
+     * @test
+    */
+    public function hydrate_existing_key(){
 
-    //     $object = new MailObject();
-    //     $this->assertCount(2, $this->invokeMethod($object, 'validateMails', array(["test@gmail.com","salut@gmail.com"])));
-    // }
+        $object = new MailObject();
+        $this->assertTrue($this->invokeMethod($object, 'hydrate', array(array(
+            "from"=>"machin@gmail.com"
+        ))));
+    }
+    /** 
+     * @test
+    */
+    public function hydrate_non_existing_key(){
+
+        $object = new MailObject();
+        $this->expectException("Exception");
+        $this->invokeMethod($object, 'hydrate', array(array(
+            "blabla"=>"machin@gmail.com"
+        )));
+    }
+    /** 
+     * @test
+    */
+    public function validate_multiple_good_mails(){
+
+        $object = new MailObject();
+        $this->assertTrue($this->invokeMethod($object, 'validateMails', array(["test@gmail.com","salut@gmail.com"])));
+    }
+    /** 
+     * @test
+    */
+    public function validate_one_bad_mail(){
+
+        $object = new MailObject();
+        $this->expectException("Exception");
+        $this->invokeMethod($object, 'validateMails', array(["test@gmail.com","salut@gmailcom"]));
+    }
     
 
     // methode permettant d'invoquer les fonctions privées et protected
