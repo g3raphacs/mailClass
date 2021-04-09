@@ -7,11 +7,11 @@ use PHPUnit\Framework\TestCase;
 
 class MailObjectTest extends TestCase
 {
-    public function test(){
+    // public function test(){
 
-        $object = new MailObject();
-        $this->assertCount(2, $this->invokeMethod($object, 'validateMails', array(["test@gmail.com","salut@gmail.com"])));
-    }
+    //     $object = new MailObject();
+    //     $this->assertCount(2, $this->invokeMethod($object, 'validateMails', array(["test@gmail.com","salut@gmail.com"])));
+    // }
 
 
     public function invokeMethod(&$object, $methodName, array $parameters = array()){
