@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 
 class MailObjectTest extends TestCase
 {
+    /** @test */
     public function hydrateFalse() 
     {
         $object = new MailObject();
@@ -14,6 +15,7 @@ class MailObjectTest extends TestCase
             "hello" => "salut@gmail.com"
         )));
     }
+    /** @test */
     public function hydrateTrue() {
         $object = new MailObject();
 
