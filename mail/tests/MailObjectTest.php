@@ -7,37 +7,20 @@ use PHPUnit\Framework\TestCase;
 
 class MailObjectTest extends TestCase
 {
-    // public function test(){
-    //     $object = new MailObject();
-    //     $methodName = "validateMails";
 
-    //     $reflection = new \ReflectionClass(get_class($object));
-    //     $method = $reflection->getMethod($methodName);
-    //     $method->setAccessible(true);
-
-    //     $objectReflection = $method->invokeArgs($object, array(["test@gmail.com","salutgmail.com"]));
-    //     print_r($objectReflection);
-
-    //     $this->assertCount(2, $objectReflection);
-
-    // }
-    
     public function test(){
-        $object = new MailObject();
-        $methodName = "validateMails";
 
+        $object = new MailObject();
+        $this->assertCount(2, $this->invokeMethod($object, 'validateMails', array(["test@gmail.com","salut@gmail.com"])));
+    }
+
+    public function invokeMethod(&$object, $methodName, array $parameters = array()){
         $reflection = new \ReflectionClass(get_class($object));
         $method = $reflection->getMethod($methodName);
         $method->setAccessible(true);
 
-        $objectReflection = $method->invokeArgs($object, array(["test@gmail.com","salutgmail.com"]));
-        print_r($objectReflection);
-
-        $this->assertCount(2, $objectReflection);
-
+        return $method->invokeArgs($object, $parameters);
     }
-
-
 
 }
 
