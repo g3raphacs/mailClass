@@ -67,7 +67,7 @@ class MailObject
      * @param array $data
      * @return void
      */
-    public function hydrate(array $data):void
+    public function hydrate(array $data):bool
     {
         foreach ($data as $key => $value)
         {
@@ -75,14 +75,16 @@ class MailObject
             try{
                 if(!method_exists($this, $method))
                 {
-                    throw new Exception('Aucun setter definit pour la variable: '.$key);
+                    throw new Exception('Aucun setter definit pour la variable: ', 10);
                 }else{
                     $this->$method($value);
                 }
             }catch(Exception $e){
                 $this->exceptions[] = $e->getMessage();
+                return false;
             }
         }
+        return true;
     }
 
     /**
