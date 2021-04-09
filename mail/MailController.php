@@ -20,14 +20,28 @@ $mail = new MailObject($data = array(
     "template_file"=> $template_file,
     "template_data"=> $template_data,
     "html"=> true,
+    "maxFileSize"=> 1000000
 ));
 
 
 //Envoi du mail
 $sendmail = $mail->sendMail();
 
-if($sendmail){ 
-    echo '<div style="color: white; background-color: DodgerBlue; margin-top: 10rem;text-align: center; width: 25%;font-size: 1.5rem; margin-right: auto;margin-left: auto;">mail envoyé</div>'; 
-}else{ 
-    echo "echec"; 
+
+if(is_array($sendmail)){
+    showExceptions($sendmail);
+}else{
+    if($sendmail){ 
+        echo '<div style="color: white; background-color: DodgerBlue; margin-top: 10rem;text-align: center; width: 25%;font-size: 1.5rem; margin-right: auto;margin-left: auto;">mail envoyé</div>'; 
+    }else{ 
+        echo "le mail n'a pas été envoyé"; 
+    }
+}
+
+
+//Afficher les exceptions
+function showExceptions($exceptions){
+    for($i = 0 ; $i<count($exceptions); $i++){
+        echo '<div style="color: white; background-color: red; margin-top: 10rem;text-align: center; width: 25%;font-size: 1.5rem; margin-right: auto;margin-left: auto;">'.$exceptions[$i].'</div>'; 
+    }
 }

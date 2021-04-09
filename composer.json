@@ -1,15 +1,16 @@
 {
-    "name": "jee/mailclass",
+    "name": "shoar/mail-class",
+    "description": "class mail",
     "require-dev": {
         "phpunit/phpunit": "^9.5"
     },
     "authors": [
         {
-            "name": "g3raphacs",
-            "email": "g3raphacs@gmail.com"
+            "name": "sawkea",
+            "email": "shoareau@orange.fr"
         }
     ],
-    "autoload":{
+    "autoload": {
         "psr-4": {
             "Mail\\" : "./mail"
         }

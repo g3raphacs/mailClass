@@ -2,18 +2,27 @@
 
 namespace Mail;
 
-use BadFunctionCallException;
 use PHPUnit\Framework\TestCase;
 
 class MailObjectTest extends TestCase
 {
-
-    public function test(){
-
+    public function hydrateFalse() 
+    {
         $object = new MailObject();
-        $this->assertCount(2, $this->invokeMethod($object, 'validateMails', array(["test@gmail.com","salut@gmail.com"])));
+
+        $this->assertFalse($object->hydrate(array(
+            "hello" => "salut@gmail.com"
+        )));
+    }
+    public function hydrateTrue() {
+        $object = new MailObject();
+
+        $this->assertTrue($object->hydrate(array(
+        "from" => "salut@gmail.com"
+        )));
     }
 
+    // methode permettant d'invoquer les fonctions privées et protected
     public function invokeMethod(&$object, $methodName, array $parameters = array()){
         $reflection = new \ReflectionClass(get_class($object));
         $method = $reflection->getMethod($methodName);

@@ -1,6 +1,8 @@
 <?php
-
 namespace Mail;
+
+use Exception;
+
 /** 
  * Class MailObject 
  * Permet d'envoyer un mail
@@ -32,10 +34,12 @@ class MailObject
     private $template_data= array();
     private $cc = [];
     private $bcc = [];
-    private $msg = "hello world!";
+    private $msg = "";
     private $html = true;
     private $returnpath = "";
     private $boundary = "";
+    private $exceptions = [];
+    private $maxFileSize = 25000000;
 
     private $MIMEversion = "MIME-Version: 1.0";
 
@@ -63,16 +67,24 @@ class MailObject
      * @param array $data
      * @return void
      */
-    public function hydrate(array $data):void
+    public function hydrate(array $data):bool
     {
         foreach ($data as $key => $value)
         {
             $method = 'set_'.$key;
-            if(method_exists($this, $method))
-            {
-                $this->$method($value);
-            }    
+            try{
+                if(!method_exists($this, $method))
+                {
+                    throw new Exception('Aucun setter definit pour la variable: ', 10);
+                }else{
+                    $this->$method($value);
+                }
+            }catch(Exception $e){
+                $this->exceptions[] = $e->getMessage();
+                return false;
+            }
         }
+        return true;
     }
 
     /**
@@ -82,10 +94,12 @@ class MailObject
      * @return void
      */
     private function addVariables(array $data):void{
-        foreach ($data as $key => $value)
-        {
-            $newkey = "{".$key."}";
-            $this->template_data[$newkey] = $value;
+        if(!empty($data)){
+            foreach ($data as $key => $value)
+            {
+                $newkey = "{".$key."}";
+                $this->template_data[$newkey] = $value;
+            }
         }
     }
 
@@ -102,45 +116,55 @@ class MailObject
     /**
      * Fonction pour envoyer le message
      *
-     * @return boolean
+     * @return mixed
      */
-    public function sendMail():bool{
-        if($this->hasTo()){
+    public function sendMail(){
             $body = $this->createMessage();
-
+            
             // ajout du header du message
             $headers = $this->addHeader();
-
+            
             // destinataires en copie et copie cachée
             $headers .= $this->addCopyDest();
-
+            
             // ajout du MIME et du content-type
             $headers .= $this->addMIME();
-
+            
             // ajoute le header du body
             $body = $this->setMsgHeader($body);
-
+            
             // ajoute les fichiers joints
             $body = $this->prepareFiles($body);
 
             // fermeture du message
             $body .= $this->closeMessage();
 
-            
+            if(!empty($this->exceptions)){
+                return $this->exceptions; 
+            }
+
             // Envoi du mail
             if(!$this->TEST_MODE){
                 return @mail(implode(",",$this->to), $this->subject, $body, $headers, $this->returnpath);  
-            }
-        }
-        return false;   
+            }return false;
+
     }
+
     /**
      * Teste si l'option HTML est activée
      * @return bool
      */
     protected function checkHTML():bool{
-        if($this->html && file_exists($this->template_file)){
-            return true;
+        if($this->html){
+            try{
+                if(!file_exists($this->template_file)){
+                    throw new Exception("Le template HTML est introuvable");
+                }
+                return true;
+            }catch(Exception $e){
+                $this->exceptions[] = $e->getMessage();
+                return false;
+            }
         }return false;
     }
     /**
@@ -150,16 +174,24 @@ class MailObject
      * @return string
      */
     private function createMessage():string{
-        if($this->checkHTML()){
-            // creation du message html
-            $htmlContent = file_get_contents($this->template_file);
-            //chercher et remplacer toutes les variables $template_data
-            foreach(array_keys($this->template_data) as $key){
-                if(strlen($key) > 2 && trim($key) != ""){
-                    $htmlContent  =str_replace($key, $this->template_data[$key], $htmlContent);
+        try{
+            if($this->msg === ""){
+                throw new Exception("Aucun message à envoyer");
+            }else{
+                if($this->checkHTML()){
+                    // creation du message html
+                    $htmlContent = file_get_contents($this->template_file);
+                    //chercher et remplacer toutes les variables $template_data
+                    foreach(array_keys($this->template_data) as $key){
+                        if(strlen($key) > 2 && trim($key) != ""){
+                            $htmlContent  =str_replace($key, $this->template_data[$key], $htmlContent);
+                        }
+                    }
+                    return $htmlContent;
                 }
             }
-            return $htmlContent;
+        }catch(Exception $e){
+            $this->exceptions[] = $e->getMessage();
         }
         return $this->msg;
     }
@@ -168,25 +200,42 @@ class MailObject
      * Valide emails
      *
      * @param array $mails
-     * @return void
+     * @return bool
      */
-    private function validateMails(array $mails){
-        $tab = [];
-        for($i=0 ; $i<count($mails) ; $i++){
-            if (filter_var($mails[$i], FILTER_VALIDATE_EMAIL)) {
-                $tab[$i] = $mails[$i];
+    private function validateMails(array $mails):bool{
+        try{
+            for($i=0 ; $i<count($mails) ; $i++){
+                if (!filter_var($mails[$i], FILTER_VALIDATE_EMAIL)) {
+                    throw new Exception("L'adresse mail ".$mails[$i]." est invalide");
+                }
             }
+        }catch(Exception $e){
+            $this->exceptions[] = $e->getMessage();
+            return false;
         }
-        return $tab;
+        return true;
     }
-
+    
     /**
      * Ajout header
      *
      * @return string
      */
     private function addHeader():string{
-        $fromline = $this->fromName." <".$this->from.">";
+        $fromline="";
+        try{
+            if($this->fromName === ""){
+                throw new Exception("Le nom de l'expéditeur est vide");
+            }else{
+                $tab = [$this->from];
+                if($this->validateMails($tab)){
+                    $fromline = $this->fromName." <".$this->from.">";
+                }
+            }
+        }catch(Exception $e){
+            $this->exceptions[] = $e->getMessage();
+            return "";
+        }
         return "From: ".$fromline."\n";
     }
 
@@ -228,12 +277,7 @@ class MailObject
      *
      * @return bool
      */
-    private function hasTo():bool{
-        if(count($this->to)>0){
-            return true;
-        }return false;
-    }
-    
+
     /**
      * Préparation des fichiers
      *
@@ -243,19 +287,29 @@ class MailObject
     private function prepareFiles($msg):string{
         $message = $msg;
         if(!empty($_FILES) && count($_FILES['file']['name'])>0 && $_FILES['file']['name'][0]!==""){
+            
             for($i =0 ; $i<count($_FILES['file']['name']) ; $i++){
-                $file_name = $_FILES['file']['name'][$i]; 
-                $file_size = $_FILES['file']['size'][$i]; 
-
-                $message .= "--{$this->boundary}\n"; 
-                $fp =    @fopen($_FILES['file']['tmp_name'][$i], "rb"); 
-                $data =  @fread($fp, $file_size); 
-                @fclose($fp); 
-                $data = chunk_split(base64_encode($data)); 
-                $message .= "Content-Type: application/octet-stream; name=\"".$file_name."\"\n" .  
-                "Content-Description: ".$file_name."\n" . 
-                "Content-Disposition: attachment;\n" . " filename=\"".$file_name."\"; size=".$file_size.";\n" .  
-                "Content-Transfer-Encoding: base64\n\n" . $data . "\n\n"; 
+                try{
+                    $file_name = $_FILES['file']['name'][$i]; 
+                    $file_size = $_FILES['file']['size'][$i]; 
+                    if($file_size>$this->maxFileSize){
+                        throw new Exception("Le fichier ".$file_name."dépasse la limite de taille autorisée");
+                    }else{
+                        $message .= "--{$this->boundary}\n"; 
+                        $fp =    @fopen($_FILES['file']['tmp_name'][$i], "rb"); 
+                        $data =  @fread($fp, $file_size); 
+                        @fclose($fp); 
+                        $data = chunk_split(base64_encode($data)); 
+                        $message .= "Content-Type: application/octet-stream; name=\"".$file_name."\"\n" .  
+                        "Content-Description: ".$file_name."\n" . 
+                        "Content-Disposition: attachment;\n" . " filename=\"".$file_name."\"; size=".$file_size.";\n" .  
+                        "Content-Transfer-Encoding: base64\n\n" . $data . "\n\n"; 
+                    }
+    
+                }catch(Exception $e){
+                $this->exceptions[] = $e->getMessage();
+                return "";
+                }
             }
         }
         return $message;
@@ -287,6 +341,11 @@ class MailObject
         return $this;
     }
 
+    private function set_maxFileSize(int $maxFileSize)
+    {
+        $this->maxFileSize = $maxFileSize;
+        return $this;
+    }
     private function set_from(string $from)
     {
         $this->from = $from;
@@ -301,8 +360,17 @@ class MailObject
     private function set_to(string $to)
     {
         $tab = explode(",",$to);
-        $tab = $this->validateMails($tab);
-        $this->to = $tab;
+        try{
+            if(empty($tab) || $to === ""){
+                throw new Exception("Aucun destinataire définit");
+            }else{
+                if($this->validateMails($tab)){
+                    $this->to = $tab;
+                }
+            }
+        }catch(Exception $e){
+            $this->exceptions[] = $e->getMessage();
+        }
         return $this;
     }
     private function set_subject(string $subject)
@@ -322,16 +390,22 @@ class MailObject
     }
     private function set_cc(string $cc)
     {
-        $tab = explode(",",$cc);
-        $tab = $this->validateMails($tab);
-        $this->cc = $tab;
+        if($cc !== ""){
+            $tab = explode(",",$cc);
+            if($this->validateMails($tab)){
+                $this->cc = $tab;
+            }
+        }
         return $this;
     }
     private function set_bcc(string $bcc)
     {
-        $tab = explode(",",$bcc);
-        $tab = $this->validateMails($tab);
-        $this->bcc = $tab;
+        if($bcc !== ""){
+            $tab = explode(",",$bcc);
+            if($this->validateMails($tab)){
+                $this->bcc = $tab;
+            }
+        }
         return $this;
     }
     private function set_msg(string $msg)
@@ -339,7 +413,7 @@ class MailObject
         $this->msg = $msg;
         return $this;
     }
-    private function set_html(bool $html)
+    protected function set_html(bool $html)
     {
         $this->html = $html;
         return $this;
